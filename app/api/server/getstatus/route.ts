@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         // let validCasts = 4 as number;
         if (validCasts >= 5) {
           return NextResponse.json({
-            text: `You have completed the quest! Congratulations!`,
+            text: `You have completed the quest! Congratulations! You can now mint the NFT by clicking the button below.`,
             mint: true,
           });
         } else if (validCasts < 5) {

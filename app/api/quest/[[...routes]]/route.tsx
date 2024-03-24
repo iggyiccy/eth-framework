@@ -20,7 +20,38 @@ app.frame("/", async (c) => {
   const address = frameData?.address;
   const option = inputText || buttonValue;
   let mint;
+  const sendAnalytics = async () => {
+    const response = await fetch(
+      "https://api.pinata.cloud/farcaster/frames/interactions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: {
+            trustedData: {},
+            untrustedData: {
+              buttonIndex: frameData?.buttonIndex,
+              fid: frameData?.fid,
+              messageHash: frameData?.messageHash,
+              timestamp: frameData?.timestamp,
+            },
+          },
+          frame_id: "quest_999999",
+        }),
+      }
+    );
+    if (!response.ok) {
+      console.error(`HTTP error! status: ${response.status}`);
+    } else {
+      const data = await response.json();
+      return data.text;
+    }
+  };
   const handleSignUp = async () => {
+    sendAnalytics();
     const response = await fetch("http://localhost:3000/api/server/signup", {
       method: "POST",
       body: JSON.stringify({ fid: fid, address: address ? address : null }),
@@ -33,6 +64,7 @@ app.frame("/", async (c) => {
     }
   };
   const getStatus = async () => {
+    sendAnalytics();
     const response = await fetch("http://localhost:3000/api/server/getstatus", {
       method: "POST",
       body: JSON.stringify({ fid: fid }),
