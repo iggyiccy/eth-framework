@@ -16,6 +16,9 @@ track of their progress.
 
 ## Features
 
+The FarChurch project currently have two frames: Quest Frame and Verses Frame.
+Quest Frame is used to create a new quest, query user's quest status
+
 - [ ] Quest Frame: Create a new quest
 - [ ] Quest Frame: Bot/Server to capture daily reflections
 - [ ] Quest Frame: Claim NFT badge on completion

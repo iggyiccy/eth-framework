@@ -10,6 +10,39 @@ const supabase = createClient<Database>(
 export async function POST(req: NextRequest) {
   if (typeof req.body === "object" && req.body !== null) {
     const body = await req.json();
+    const checkValidCast = async () => {
+      let validCasts = 0;
+      try {
+        const response = await fetch(
+          `https://api.pinata.cloud/v3/farcaster/casts?fid=${body?.fid}`,
+          // `https://api.pinata.cloud/v3/farcaster/casts?fid=384103`, // for testing
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${process.env.PINATA_JWT}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          console.error(`HTTP error! status: ${response.status}`);
+        } else {
+          const data = await response.json();
+          const casts = data.data.casts;
+          casts?.forEach((cast: any) => {
+            if (
+              cast.root_parent_url === process.env.FARCASTER_PARENT_URL ||
+              cast.parent_url === process.env.FARCASTER_PARENT_URL
+            ) {
+              console.log(cast);
+              validCasts++;
+            }
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      return validCasts;
+    };
     try {
       // check from the database "farchurch-5-day-quest" if the user fid already exists and return the start date, expiry date, and days left
       var currentTimestamp = new Date().toISOString();
@@ -30,26 +63,29 @@ export async function POST(req: NextRequest) {
         const daysLeft = Math.ceil(
           (expiryDate.getTime() - currentTime.getTime()) / (1000 * 60 * 60 * 24)
         );
-        // TODO it should determine by the number of valid cast posted by the user instead of daysLeft
-        // TODO check if all the casts are valid
-        let validCasts = 4 as number;
-        if (validCasts === 5) {
+        const validCasts = await checkValidCast();
+        // let validCasts = 4 as number;
+        if (validCasts >= 5) {
           return NextResponse.json({
             text: `You have completed the quest! Congratulations!`,
             mint: true,
           });
-        } else {
+        } else if (validCasts < 5) {
           return NextResponse.json({
             text: `
   Start date: ${startDate} \nExpiry date: ${expiryDateString} \nYou have ${validCasts.toString()} valid casts. \n You still have ${daysLeft.toString()} days left to complete the quest.
   `,
           });
+        } else {
+          return NextResponse.json({
+            text: `You have not signed up yet! Please sign up again.`,
+          });
         }
       }
     } catch (err) {
-      return NextResponse.json({ message: "Internal server error" });
+      return NextResponse.json({ text: "Internal server error" });
     }
   } else {
-    return NextResponse.json({ message: "Invalid request body" });
+    return NextResponse.json({ text: "Invalid request body" });
   }
 }

@@ -130,7 +130,10 @@ app.frame("/", async (c) => {
         </Button.Link>
       ),
       option === "status" && mint === true && (
-        <Button.Mint target="eip155:7777777:0x060f3edd18c47f59bd23d063bbeb9aa4a8fec6df:69420">
+        <Button.Mint
+          target="eip155:7777777:0x060f3edd18c47f59bd23d063bbeb9aa4a8fec6df:69420"
+          // TODO fix the mint target
+        >
           Mint Now
         </Button.Mint>
       ),
