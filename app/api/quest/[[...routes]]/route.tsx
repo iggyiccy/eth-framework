@@ -14,9 +14,46 @@ const app = new Frog({
 // Uncomment to use Edge Runtime
 // export const runtime = 'edge'
 
-app.frame("/", (c) => {
-  const { buttonValue, inputText, status } = c;
+app.frame("/", async (c) => {
+  const { buttonValue, inputText, status, frameData } = c;
+  const fid = frameData?.fid;
+  const address = frameData?.address;
   const option = inputText || buttonValue;
+  let mint;
+  const handleSignUp = async () => {
+    const response = await fetch("http://localhost:3000/api/server/signup", {
+      method: "POST",
+      body: JSON.stringify({ fid: fid, address: address ? address : null }),
+    });
+    if (!response.ok) {
+      console.error(`HTTP error! status: ${response.status}`);
+    } else {
+      const data = await response.json();
+      return data.text;
+    }
+  };
+  const getStatus = async () => {
+    const response = await fetch("http://localhost:3000/api/server/getstatus", {
+      method: "POST",
+      body: JSON.stringify({ fid: fid }),
+    });
+    if (!response.ok) {
+      console.error(`HTTP error! status: ${response.status}`);
+    } else {
+      const data = await response.json();
+      // if data.mint is true, set mint to true else set mint to false
+      mint = data.mint ? true : false;
+      return data.text;
+    }
+  };
+  let signup;
+  if (option === "signUp") {
+    signup = await handleSignUp();
+  }
+  let getstatus;
+  if (option === "status") {
+    getstatus = await getStatus();
+  }
   return c.res({
     image:
       option === "signUp" ? (
@@ -35,7 +72,6 @@ app.frame("/", (c) => {
           }}
         >
           <div
-            // TODO sign up user or check if user is signed up
             style={{
               color: "white",
               fontSize: 50,
@@ -47,9 +83,7 @@ app.frame("/", (c) => {
               whiteSpace: "pre-wrap",
             }}
           >
-            {
-              "Thanks for signing up! Please cast by @ mentioning the @farchurch bot. You can also check your status by clicking the button below."
-            }
+            {signup}
           </div>
         </div>
       ) : option === "status" ? (
@@ -68,10 +102,9 @@ app.frame("/", (c) => {
           }}
         >
           <div
-            // TODO get the status
             style={{
               color: "white",
-              fontSize: 60,
+              fontSize: 40,
               fontStyle: "normal",
               letterSpacing: "-0.025em",
               lineHeight: 1.4,
@@ -80,7 +113,7 @@ app.frame("/", (c) => {
               whiteSpace: "pre-wrap",
             }}
           >
-            {"Here is your status"}
+            {getstatus}
           </div>
         </div>
       ) : (
@@ -95,6 +128,11 @@ app.frame("/", (c) => {
         >
           Cast Now
         </Button.Link>
+      ),
+      option === "status" && mint === true && (
+        <Button.Mint target="eip155:7777777:0x060f3edd18c47f59bd23d063bbeb9aa4a8fec6df:69420">
+          Mint Now
+        </Button.Mint>
       ),
       status != "response" && (
         <Button.Link href="https://github.com/iggyiccy">Info</Button.Link>
